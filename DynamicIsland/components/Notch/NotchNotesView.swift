@@ -36,6 +36,7 @@ struct NotchNotesView: View {
     @State private var editorImageData: Data? = nil
     @State private var editorColorIndex: Int = 0
     @State private var editorNoteId: UUID?
+    @State private var autoSaveTask: Task<Void, Never>?
 
     @Default(.enableNotes) var enableNotes
     
@@ -102,6 +103,9 @@ struct NotchNotesView: View {
             updateLayoutState()
         }
         .onDisappear {
+            if isEditingNewNote || selectedNoteId != nil {
+                persistNote()
+            }
             coordinator.notesLayoutState = .list
         }
         .onChange(of: isEditingNewNote) { _, _ in
@@ -118,6 +122,15 @@ struct NotchNotesView: View {
         }
         .onChange(of: enableNotes) { _, _ in
             updateLayoutState()
+        }
+        .onChange(of: editorContent) { _, _ in
+            scheduleAutoSave()
+        }
+        .onChange(of: editorTitle) { _, _ in
+            scheduleAutoSave()
+        }
+        .onChange(of: editorColorIndex) { _, _ in
+            scheduleAutoSave()
         }
     }
     
@@ -197,48 +210,68 @@ struct NotchNotesView: View {
         isEditingNewNote = false
     }
     
-    private func saveNote() {
+    private func persistNote() {
+        guard let id = editorNoteId else { return }
+
+        let isExistingNote = savedNotes.contains(where: { $0.id == id })
+        if !isExistingNote && editorTitle.isEmpty && editorContent.isEmpty && editorImageData == nil {
+            return
+        }
+
         var notes = savedNotes
         let now = Date()
-        
-        if let id = editorNoteId {
-            // Priority: Save image to disk if it exists
-            var fileName: String? = nil
-            if let data = editorImageData {
-                let name = "note_image_\(id.uuidString).png"
-                let fileURL = NoteItem.noteImageDataDirectory.appendingPathComponent(name)
-                try? data.write(to: fileURL)
-                fileName = name
+
+        var fileName: String? = nil
+        if let data = editorImageData {
+            let name = "note_image_\(id.uuidString).png"
+            let fileURL = NoteItem.noteImageDataDirectory.appendingPathComponent(name)
+            try? data.write(to: fileURL)
+            fileName = name
+        }
+
+        if let index = notes.firstIndex(where: { $0.id == id }) {
+            // Update
+            if let oldFileName = notes[index].imageFileName, oldFileName != fileName {
+                let oldFileURL = NoteItem.noteImageDataDirectory.appendingPathComponent(oldFileName)
+                try? FileManager.default.removeItem(at: oldFileURL)
             }
 
-            if let index = notes.firstIndex(where: { $0.id == id }) {
-                // Update
-                // If there was an old image and it's being replaced or removed, delete old file
-                if let oldFileName = notes[index].imageFileName, oldFileName != fileName {
-                    let oldFileURL = NoteItem.noteImageDataDirectory.appendingPathComponent(oldFileName)
-                    try? FileManager.default.removeItem(at: oldFileURL)
-                }
-                
-                notes[index].title = editorTitle
-                notes[index].content = editorContent
-                notes[index].imageFileName = fileName
-                notes[index].colorIndex = editorColorIndex
-            } else {
-                // Create
-                let newNote = NoteItem(
-                    id: id,
-                    title: editorTitle.isEmpty ? "Untitled Note" : editorTitle,
-                    content: editorContent,
-                    creationDate: now,
-                    colorIndex: editorColorIndex,
-                    isPinned: false,
-                    imageFileName: fileName
-                )
-                notes.insert(newNote, at: 0)
-            }
-            savedNotes = notes // Persistence fix: save back to @Default
+            notes[index].title = editorTitle
+            notes[index].content = editorContent
+            notes[index].imageFileName = fileName
+            notes[index].colorIndex = editorColorIndex
+        } else {
+            // Create
+            let newNote = NoteItem(
+                id: id,
+                title: editorTitle.isEmpty ? "Untitled Note" : editorTitle,
+                content: editorContent,
+                creationDate: now,
+                colorIndex: editorColorIndex,
+                isPinned: false,
+                imageFileName: fileName
+            )
+            notes.insert(newNote, at: 0)
         }
-        
+
+        savedNotes = notes
+    }
+
+    private func scheduleAutoSave() {
+        guard isEditingNewNote || selectedNoteId != nil else { return }
+
+        autoSaveTask?.cancel()
+        autoSaveTask = Task {
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                persistNote()
+            }
+        }
+    }
+
+    private func saveNote() {
+        persistNote()
         closeEditor()
     }
     
@@ -311,6 +344,7 @@ struct NotchNotesView: View {
     }
 
     private func cancelEdit() {
+        persistNote()
         closeEditor()
     }
     
@@ -327,6 +361,8 @@ struct NotchNotesView: View {
     }
     
     private func closeEditor() {
+        autoSaveTask?.cancel()
+        autoSaveTask = nil
         isEditingNewNote = false
         selectedNoteId = nil
         // Tiny delay to clear state after animation
