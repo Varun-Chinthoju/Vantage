@@ -3468,8 +3468,12 @@ struct Appearance: View {
     @State private var url: String = ""
     @State private var speed: CGFloat = 1.0
 
-    private let notchWidthRange: ClosedRange<Double> = 640...900
-    private let defaultOpenNotchWidth: CGFloat = 640
+    private var notchWidthRange: ClosedRange<Double> {
+        Double(currentRecommendedMinimumNotchWidth())...900
+    }
+    private var defaultOpenNotchWidth: CGFloat {
+        currentRecommendedMinimumNotchWidth()
+    }
 
     private func highlightID(_ title: String) -> String {
         SettingsTab.appearance.highlightID(for: title)
@@ -4019,10 +4023,14 @@ struct Appearance: View {
     @ViewBuilder
     private func notchWidthControls() -> some View {
         Section {
+            let recommendedMin = currentRecommendedMinimumNotchWidth()
+            let tabCount = enabledStandardTabCount()
+            let dynamicRange = Double(recommendedMin)...900
+
             let widthBinding = Binding<Double>(
                 get: { Double(openNotchWidth) },
                 set: { newValue in
-                    let clamped = min(max(newValue, notchWidthRange.lowerBound), notchWidthRange.upperBound)
+                    let clamped = min(max(newValue, dynamicRange.lowerBound), dynamicRange.upperBound)
                     let value = CGFloat(clamped)
                     if openNotchWidth != value {
                         openNotchWidth = value
@@ -4033,7 +4041,7 @@ struct Appearance: View {
             VStack(alignment: .leading, spacing: 10) {
                 Slider(
                     value: widthBinding,
-                    in: notchWidthRange,
+                    in: dynamicRange,
                     step: 10
                 ) {
                     HStack {
@@ -4047,21 +4055,27 @@ struct Appearance: View {
                 .settingsHighlight(id: highlightID("Expanded notch width"))
 
                 HStack {
+                    Text("\(tabCount) tab\(tabCount == 1 ? "" : "s") enabled · min \(Int(recommendedMin)) px")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     Spacer()
                     Button("Reset Width") {
-                        openNotchWidth = defaultOpenNotchWidth
+                        openNotchWidth = recommendedMin
                     }
-                    .disabled(abs(openNotchWidth - defaultOpenNotchWidth) < 0.5)
+                    .disabled(abs(openNotchWidth - recommendedMin) < 0.5)
                     .buttonStyle(.bordered)
                 }
 
                 let description = enableMinimalisticUI
                     ? "Width adjustments apply only to the standard notch layout. Disable Minimalistic UI to edit this value."
-                    : "Extend the notch span so the clipboard, colour picker, and other trailing icons remain visible on scaled displays (e.g. More Space)."
+                    : "Recommended minimum width adjusts automatically based on the number of enabled tabs."
 
                 Text(description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+            .onAppear {
+                enforceMinimumNotchWidth()
             }
         } header: {
             HStack {

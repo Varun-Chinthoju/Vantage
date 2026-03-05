@@ -28,8 +28,72 @@ let downloadSneakSize: CGSize = .init(width: 65, height: 1)
 let batterySneakSize: CGSize = .init(width: 160, height: 1)
 
 var openNotchSize: CGSize {
-    let width = Defaults[.openNotchWidth]
-    return .init(width: width, height: 200) // Adjusted to a better middle ground
+    let storedWidth = Defaults[.openNotchWidth]
+    let minWidth = currentRecommendedMinimumNotchWidth()
+    let width = max(storedWidth, minWidth)
+    return .init(width: width, height: 200)
+}
+
+// MARK: - Tab-Based Notch Width
+
+/// Counts the number of currently enabled standard notch tabs.
+/// Mirrors the tab-building logic in ``TabSelectionView``.
+func enabledStandardTabCount() -> Int {
+    var count = 0
+
+    // Home tab
+    if Defaults[.showStandardMediaControls] || Defaults[.showCalendar] || Defaults[.showMirror] {
+        count += 1
+    }
+
+    // Shelf tab
+    if Defaults[.dynamicShelf] {
+        count += 1
+    }
+
+    // Timer tab (only in .tab display mode)
+    if Defaults[.enableTimerFeature] && Defaults[.timerDisplayMode] == .tab {
+        count += 1
+    }
+
+    // Stats tab
+    if Defaults[.enableStatsFeature] {
+        count += 1
+    }
+
+    // Notes / Clipboard tab
+    if Defaults[.enableNotes] || (Defaults[.enableClipboardManager] && Defaults[.clipboardDisplayMode] == .separateTab) {
+        count += 1
+    }
+
+    // Terminal tab
+    if Defaults[.enableTerminalFeature] {
+        count += 1
+    }
+
+    return count
+}
+
+/// Returns the recommended minimum notch width for the given tab count.
+func recommendedMinimumNotchWidth(forTabCount count: Int) -> CGFloat {
+    if count >= 6 { return 770 }
+    if count >= 5 { return 690 }
+    return 640
+}
+
+/// Returns the recommended minimum notch width for the current tab configuration.
+func currentRecommendedMinimumNotchWidth() -> CGFloat {
+    recommendedMinimumNotchWidth(forTabCount: enabledStandardTabCount())
+}
+
+/// Enforces the minimum notch width based on current tab count.
+/// Only adjusts when not in minimalistic mode.
+func enforceMinimumNotchWidth() {
+    guard !Defaults[.enableMinimalisticUI] else { return }
+    let minWidth = currentRecommendedMinimumNotchWidth()
+    if Defaults[.openNotchWidth] < minWidth {
+        Defaults[.openNotchWidth] = minWidth
+    }
 }
 private let minimalisticBaseOpenNotchSize: CGSize = .init(width: 420, height: 180)
 private let minimalisticLyricsExtraHeight: CGFloat = 40
