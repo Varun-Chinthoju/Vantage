@@ -28,6 +28,12 @@ class ScreenTimeManager: ObservableObject {
     @Published var temporaryLimits: [String: TimeInterval] = [:]
     private var notifiedLimits: Set<String> = []
     
+    @Published var isFocusModeActive: Bool = false
+    
+    var distractingApps: [String] {
+        Defaults[.distractingApps].map { $0.lowercased() }
+    }
+    
     private var currentAppBundleId: String?
     private var currentAppStartTime: Date?
     private var timer: Timer?
@@ -38,8 +44,12 @@ class ScreenTimeManager: ObservableObject {
         setupObservers()
         startTrackingCurrentApp()
         
+        // Check for daily reset on startup
+        checkDailyReset()
+        
         // Periodic save every minute
         timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            self?.checkDailyReset() // Check for day change BEFORE updating duration
             self?.updateCurrentAppDuration()
             self?.saveData()
         }
@@ -81,6 +91,21 @@ class ScreenTimeManager: ObservableObject {
     @objc private func appDidActivate(_ notification: Notification) {
         guard !isLocked else { return }
         guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else {
+            return
+        }
+        
+        if isFocusModeActive, let appName = app.localizedName, distractingApps.contains(appName.lowercased()) {
+            app.hide()
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.messageText = "Focus Mode Active"
+                alert.informativeText = "\(app.localizedName ?? "App") is blocked right now."
+                alert.alertStyle = .warning
+                alert.addButton(withTitle: "OK")
+                
+                NSApp.activate(ignoringOtherApps: true)
+                alert.runModal()
+            }
             return
         }
         
@@ -140,16 +165,25 @@ class ScreenTimeManager: ObservableObject {
             if !notifiedLimits.contains(usage.bundleId) {
                 notifiedLimits.insert(usage.bundleId)
                 
-                // Show notification via ViewCoordinator
+                // Show notification via NSAlert
                 DispatchQueue.main.async {
-                    DynamicIslandViewCoordinator.shared.toggleSneakPeek(
-                        status: true,
-                        type: .screenTimeLimit,
-                        duration: 5.0,
-                        icon: "hourglass.bottomhalf.filled",
-                        title: "Limit Reached",
-                        subtitle: "You've exceeded your temporary limit for \(usage.appName)."
-                    )
+                    let alert = NSAlert()
+                    alert.messageText = "Limit Reached"
+                    alert.informativeText = "You've exceeded your temporary limit for \(usage.appName)."
+                    alert.alertStyle = .warning
+                    alert.addButton(withTitle: "OK")
+                    alert.addButton(withTitle: "Ignore for 15 minutes")
+                    
+                    NSApp.activate(ignoringOtherApps: true)
+                    let response = alert.runModal()
+                    
+                    if response == .alertSecondButtonReturn {
+                        // Ignore for 15 minutes
+                        if let currentLimit = self.temporaryLimits[usage.bundleId] {
+                            self.temporaryLimits[usage.bundleId] = currentLimit + (15 * 60)
+                            self.notifiedLimits.remove(usage.bundleId)
+                        }
+                    }
                 }
             }
         }
@@ -170,9 +204,42 @@ class ScreenTimeManager: ObservableObject {
     }
     
     func resetStats() {
+        print("ScreenTimeManager: Resetting stats for new day")
         appUsages.removeAll()
+        notifiedLimits.removeAll()
         Defaults[.screenTimeData] = [:]
         startTrackingCurrentApp()
+    }
+    
+    private func checkDailyReset() {
+        let calendar = Calendar.current
+        let now = Date()
+        let resetHour = Defaults[.screenTimeResetHour]
+        
+        // Find the "most recent" reset time boundary
+        var resetComponents = calendar.dateComponents([.year, .month, .day], from: now)
+        resetComponents.hour = resetHour
+        resetComponents.minute = 0
+        resetComponents.second = 0
+        
+        guard var recentResetBoundary = calendar.date(from: resetComponents) else { return }
+        
+        // If the calculated boundary is in the future, it means the last reset should have happened 24h ago
+        if recentResetBoundary > now {
+            recentResetBoundary = calendar.date(byAdding: .day, value: -1, to: recentResetBoundary) ?? recentResetBoundary
+        }
+        
+        guard let lastReset = Defaults[.lastScreenTimeResetDate] else {
+            // First time, set it to the current boundary so we don't reset immediately
+            Defaults[.lastScreenTimeResetDate] = recentResetBoundary
+            return
+        }
+        
+        // If our last recorded reset is older than the most recent boundary, reset now
+        if lastReset < recentResetBoundary {
+            resetStats()
+            Defaults[.lastScreenTimeResetDate] = now
+        }
     }
     
     var sortedUsages: [AppUsage] {
