@@ -38,6 +38,12 @@ enum SneakContentType: Equatable {
     case capsLock
     case extensionLiveActivity(bundleID: String, activityID: String)
     case screenTimeLimit
+    case greeting(name: String, message: String)
+    
+    var isGreeting: Bool {
+        if case .greeting = self { return true }
+        return false
+    }
 }
 
 extension SneakContentType {
@@ -62,6 +68,8 @@ extension SneakContentType {
             return true
         case let (.extensionLiveActivity(lb, la), .extensionLiveActivity(rb, ra)):
             return lb == rb && la == ra
+        case let (.greeting(ln, lm), .greeting(rn, rm)):
+            return ln == rn && lm == rm
         default:
             return false
         }
@@ -339,7 +347,13 @@ class DynamicIslandViewCoordinator: ObservableObject {
             resolvedDuration = duration
         }
         sneakPeekDuration = resolvedDuration
-        let bypassedTypes: [SneakContentType] = [.music, .timer, .reminder, .bluetoothAudio]
+        let isBypassed: Bool
+        switch type {
+        case .music, .timer, .reminder, .bluetoothAudio, .greeting:
+            isBypassed = true
+        default:
+            isBypassed = false
+        }
         
         // Check if it's an extension type
         let isExtensionType: Bool
@@ -349,7 +363,7 @@ class DynamicIslandViewCoordinator: ObservableObject {
             isExtensionType = false
         }
         
-        if !isExtensionType && !bypassedTypes.contains(type) && !Defaults[.enableSystemHUD] {
+        if !isExtensionType && !isBypassed && !Defaults[.enableSystemHUD] {
             return
         }
         DispatchQueue.main.async {

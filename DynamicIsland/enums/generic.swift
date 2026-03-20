@@ -109,6 +109,12 @@ enum SettingsEnum {
     case hud
     case shelf
     case extensions
+    case stats
+    case screenTime
+    case colorPicker
+    case notes
+    case clipboard
+    case terminal
 }
 
 enum DownloadIndicatorStyle: String, Defaults.Serializable {

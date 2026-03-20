@@ -237,7 +237,7 @@ let dynamicIslandPillCornerRadiusInsets: (opened: CGFloat, closed: (standard: CG
 /// Vertical offset from the top screen edge for the Dynamic Island pill.
 /// Creates a visual gap so the pill floats below the menu bar, mimicking
 /// the iPhone's Dynamic Island detachment from the physical screen edge.
-let dynamicIslandTopOffset: CGFloat = 6
+let dynamicIslandTopOffset: CGFloat = 0
 
 /// Extra horizontal padding applied OUTSIDE the pill clip shape in Dynamic
 /// Island mode so the drop shadow has room to render without being clipped

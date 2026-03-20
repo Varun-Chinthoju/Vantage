@@ -167,12 +167,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hideWindowsForLock()
     }
 
+    private func getGreetingMessage() -> String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 6..<12: return "Good Morning"
+        case 12..<17: return "Good Afternoon"
+        case 17..<22: return "Good Evening"
+        default: return "Welcome Back"
+        }
+    }
+
     @objc func onScreenUnlocked(_: Notification) {
         print("Screen unlocked")
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
             self.restoreWindowsAfterLock()
             self.adjustWindowPosition(changeAlpha: true)
+            
+            if Defaults[.enableWelcomeGreeting] {
+                let userName = NSFullUserName().components(separatedBy: " ").first ?? NSFullUserName()
+                let greeting = self.getGreetingMessage()
+                
+                self.coordinator.toggleSneakPeek(
+                    status: true,
+                    type: .greeting(name: "\(greeting), \(userName)", message: "Ready to work?"),
+                    duration: 4.0
+                )
+            }
         }
     }
 
