@@ -1090,6 +1090,13 @@ extension Defaults.Keys {
     static let enableCreateFromClipboard = Key<Bool>("enableCreateFromClipboard", default: true)
     static let enableNoteCharCount = Key<Bool>("enableNoteCharCount", default: true)
     static let savedNotes = Key<[NoteItem]>("savedNotes", default: [])
+
+    // MARK: Screen Time
+    static let screenTimeData = Key<[String: AppUsage]>("screenTimeData", default: [:])
+    static let enableScreenTime = Key<Bool>("enableScreenTime", default: true)
+    
+    // MARK: User Profile
+    static let userProfilePicturePath = Key<String?>("userProfilePicturePath", default: nil)
     
     // Helper to determine the default media controller based on macOS version
     static var defaultMediaController: MediaControllerType {

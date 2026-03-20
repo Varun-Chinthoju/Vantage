@@ -117,10 +117,12 @@ class ScreenAssistantManager: NSObject, ObservableObject {
     @Published var recordingDuration: TimeInterval = 0
     @Published var chatMessages: [ChatMessage] = []
     @Published var isLoading: Bool = false
+    @Published var isVoiceResponseEnabled: Bool = false
     
     private var audioRecorder: AVAudioRecorder?
     private var recordingTimer: Timer?
     private var activeRequest: URLSessionTask?
+    private let speechSynthesizer = AVSpeechSynthesizer()
     
     // Panel management
     private var chatMessagesPanel: ChatMessagesPanel?
@@ -662,12 +664,13 @@ class ScreenAssistantManager: NSObject, ObservableObject {
             return
         }
         
-        let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+        var task: URLSessionDataTask?
+        task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 
                 // Ensure this callback belongs to the current in-flight request
-                guard self.activeRequest === task else { return }
+                guard let currentTask = task, self.activeRequest === currentTask else { return }
                 
                 self.isLoading = false
                 self.activeRequest = nil
@@ -677,7 +680,7 @@ class ScreenAssistantManager: NSObject, ObservableObject {
         }
         
         activeRequest = task
-        task.resume()
+        task?.resume()
     }
     
     private func performOpenAIRequest(url: URL, requestBody: [String: Any], apiKey: String) {
@@ -696,12 +699,13 @@ class ScreenAssistantManager: NSObject, ObservableObject {
             return
         }
         
-        let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+        var task: URLSessionDataTask?
+        task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 
                 // Ensure this callback belongs to the current in-flight request
-                guard self.activeRequest === task else { return }
+                guard let currentTask = task, self.activeRequest === currentTask else { return }
                 
                 self.isLoading = false
                 self.activeRequest = nil
@@ -711,7 +715,7 @@ class ScreenAssistantManager: NSObject, ObservableObject {
         }
         
         activeRequest = task
-        task.resume()
+        task?.resume()
     }
     
     private func performClaudeRequest(url: URL, requestBody: [String: Any], apiKey: String) {
@@ -731,12 +735,13 @@ class ScreenAssistantManager: NSObject, ObservableObject {
             return
         }
         
-        let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+        var task: URLSessionDataTask?
+        task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 
                 // Ensure this callback belongs to the current in-flight request
-                guard self.activeRequest === task else { return }
+                guard let currentTask = task, self.activeRequest === currentTask else { return }
                 
                 self.isLoading = false
                 self.activeRequest = nil
@@ -746,7 +751,7 @@ class ScreenAssistantManager: NSObject, ObservableObject {
         }
         
         activeRequest = task
-        task.resume()
+        task?.resume()
     }
     
     // MARK: - Response Handlers
@@ -898,6 +903,12 @@ class ScreenAssistantManager: NSObject, ObservableObject {
     
     private func buildContextualMessage(message: String, files: [ScreenAssistantFile]) -> String {
         var contextualMessage = message
+        
+        // Add System Context
+        if let frontmostApp = NSWorkspace.shared.frontmostApplication,
+           let appName = frontmostApp.localizedName {
+            contextualMessage += "\n\n[System Context: The user is currently looking at \(appName)]"
+        }
         
         // Add file context with specific instructions for different types
         if !files.isEmpty {
@@ -1134,6 +1145,26 @@ class ScreenAssistantManager: NSObject, ObservableObject {
     func clearChat() {
         resetConversationContext()
     }
+    
+    func speak(_ text: String) {
+        guard isVoiceResponseEnabled else { return }
+        
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = 0.5
+        
+        if speechSynthesizer.isSpeaking {
+            speechSynthesizer.stopSpeaking(at: .immediate)
+        }
+        
+        speechSynthesizer.speak(utterance)
+    }
+    
+    func stopSpeaking() {
+        if speechSynthesizer.isSpeaking {
+            speechSynthesizer.stopSpeaking(at: .immediate)
+        }
+    }
 
     func resetConversationContext() {
         // Cancel any in-flight request
@@ -1143,12 +1174,17 @@ class ScreenAssistantManager: NSObject, ObservableObject {
         isLoading = false
         chatMessages.removeAll()
         clearAllFiles()
+        stopSpeaking()
     }
     
     private func addAssistantMessage(_ content: String) {
-        print("💬 ScreenAssistant: Adding assistant message: \(content.prefix(100))...")
+        print("💬 Vantage: Adding assistant message: \(content.prefix(100))...")
         let assistantMessage = ChatMessage(content: content, isFromUser: false)
         chatMessages.append(assistantMessage)
+        
+        if isVoiceResponseEnabled {
+            speak(content)
+        }
     }
     
     private func handleAPIError(statusCode: Int, provider: AIModelProvider) {

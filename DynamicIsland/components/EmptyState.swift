@@ -21,22 +21,32 @@
  */
 
 import SwiftUI
+import Defaults
 
 struct EmptyStateView: View {
     var message: String
     @State private var isVisible = true
-    
+    @Default(.userProfilePicturePath) var userProfilePicturePath
+
     var body: some View {
         HStack {
-            MinimalFaceFeatures(
-                height: 70, width: 80)
+            if let path = userProfilePicturePath, let nsImage = NSImage(contentsOfFile: path) {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+                    .padding(.trailing, 8)
+            } else {
+                MinimalFaceFeatures(
+                    height: 70, width: 80)
+            }
             Text(message)
                 .font(.system(size:14))
                 .foregroundColor(.gray)
         }.transition(.blurReplace.animation(.spring(.bouncy(duration: 0.3)))) // Smooth animation
     }
 }
-
 #Preview {
     EmptyStateView(message: "Play some music babies")
 }

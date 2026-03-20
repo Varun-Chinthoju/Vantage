@@ -47,7 +47,7 @@ struct DynamicNotchApp: App {
             }
             CheckForUpdatesView(updater: updaterController.updater)
             Divider()
-            Button("Restart Atoll") {
+            Button("Restart Vantage") {
                 guard let bundleIdentifier = Bundle.main.bundleIdentifier else { return }
 
                 let workspace = NSWorkspace.shared
@@ -110,6 +110,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let lockScreenPanelManager = LockScreenPanelManager.shared  // NEW: Lock screen music panel
     let mediaControlsStateCoordinator = MediaControlsStateCoordinator.shared
     let systemTimerBridge = SystemTimerBridge.shared
+    let screenTimeManager = ScreenTimeManager.shared
     let extensionXPCServiceHost = ExtensionXPCServiceHost.shared
     var closeNotchWorkItem: DispatchWorkItem?
     private var previousScreens: [NSScreen]?
@@ -308,8 +309,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Use a consistent height for different view types
         if coordinator.currentView == .timer {
             baseSize.height = 250 // Extra space for timer presets
-        } else if coordinator.currentView == .notes || coordinator.currentView == .clipboard {
-            let preferredHeight = coordinator.notesLayoutState.preferredHeight
+        } else if coordinator.currentView == .notes || coordinator.currentView == .clipboard || coordinator.currentView == .screenTime {
+            let preferredHeight = coordinator.currentView == .screenTime ? 300 : coordinator.notesLayoutState.preferredHeight
             baseSize.height = max(baseSize.height, preferredHeight)
         } else if coordinator.currentView == .terminal {
             let screenHeight = NSScreen.main?.visibleFrame.height ?? 800
@@ -699,7 +700,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func installTopMenuItemsIfNeeded() {
         guard let mainMenu = NSApp.mainMenu else { return }
-        if mainMenu.items.contains(where: { $0.identifier?.rawValue == "Atoll.Focus.Menu" }) {
+        if mainMenu.items.contains(where: { $0.identifier?.rawValue == "Vantage.Focus.Menu" }) {
             updateFocusMenuState()
             return
         }
@@ -707,7 +708,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let insertionIndex = preferredMenuInsertionIndex(in: mainMenu)
 
         let focusMenuItem = NSMenuItem(title: "Focus", action: nil, keyEquivalent: "")
-        focusMenuItem.identifier = NSUserInterfaceItemIdentifier("Atoll.Focus.Menu")
+        focusMenuItem.identifier = NSUserInterfaceItemIdentifier("Vantage.Focus.Menu")
         let focusSubmenu = NSMenu(title: "Focus")
 
         let withoutDevTools = NSMenuItem(
@@ -733,7 +734,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         focusUseDevToolsMenuItem = useDevTools
 
         let accessibilityMenuItem = NSMenuItem(title: "Accessibility", action: nil, keyEquivalent: "")
-        accessibilityMenuItem.identifier = NSUserInterfaceItemIdentifier("Atoll.Accessibility.Menu")
+        accessibilityMenuItem.identifier = NSUserInterfaceItemIdentifier("Vantage.Accessibility.Menu")
         let accessibilitySubmenu = NSMenu(title: "Accessibility")
 
         let requestAccessibility = NSMenuItem(
@@ -756,7 +757,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         mainMenu.insertItem(accessibilityMenuItem, at: insertionIndex + 1)
 
         let permissionsMenuItem = NSMenuItem(title: "Permissions", action: nil, keyEquivalent: "")
-        permissionsMenuItem.identifier = NSUserInterfaceItemIdentifier("Atoll.Permissions.Menu")
+        permissionsMenuItem.identifier = NSUserInterfaceItemIdentifier("Vantage.Permissions.Menu")
         let permissionsSubmenu = NSMenu(title: "Permissions")
 
         let requestFullDisk = NSMenuItem(

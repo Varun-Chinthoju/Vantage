@@ -56,7 +56,7 @@
 		7EE1D73E2E6B1E1200997219 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		7EF1D4B82FFFCE3C008D2C32 /* ExtensionEventBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ExtensionEventBridge.swift; path = DynamicIsland/managers/Extensions/ExtensionEventBridge.swift; sourceTree = SOURCE_ROOT; };
 		F4C1DD09EC134302938E84F6 /* MediaRemoteAdapter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaRemoteAdapter.framework; path = Frameworks/MediaRemoteAdapter.framework; sourceTree = SOURCE_ROOT; };
-		F54406E72CD4987A00C7AFD9 /* Atoll.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Atoll.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F54406E72CD4987A00C7AFD9 /* Vantage.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vantage.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -180,7 +180,7 @@
 		F54406E82CD4987A00C7AFD9 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				F54406E72CD4987A00C7AFD9 /* Atoll.app */,
+				F54406E72CD4987A00C7AFD9 /* Vantage.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -220,7 +220,7 @@
 				7EF19C162F577040005B9929 /* SwiftTerm */,
 			);
 			productName = DynamicIsland;
-			productReference = F54406E72CD4987A00C7AFD9 /* Atoll.app */;
+			productReference = F54406E72CD4987A00C7AFD9 /* Vantage.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -436,7 +436,7 @@
 				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_ASSET_PATHS = "\"DynamicIsland/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = 9Y64TRM77N;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = 5D25ZHGJ6B;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -477,7 +477,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.Ebullioscopic.Atoll.dev;
-				PRODUCT_NAME = Atoll;
+				PRODUCT_NAME = Vantage;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
 				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
@@ -508,7 +508,7 @@
 				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_ASSET_PATHS = "\"DynamicIsland/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = 9Y64TRM77N;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = 5D25ZHGJ6B;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -549,7 +549,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.Ebullioscopic.Atoll;
-				PRODUCT_NAME = Atoll;
+				PRODUCT_NAME = Vantage;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
 				RUNTIME_EXCEPTION_ALLOW_JIT = NO;

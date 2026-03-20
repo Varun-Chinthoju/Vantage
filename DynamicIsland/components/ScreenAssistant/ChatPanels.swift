@@ -517,6 +517,7 @@ struct ChatInputView: View {
 // MARK: - Enhanced Chat Message Bubble (No Auto-Streaming)
 struct StreamingChatMessageBubble: View {
     let message: ChatMessage
+    @Default(.userProfilePicturePath) var userProfilePicturePath
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -531,6 +532,12 @@ struct StreamingChatMessageBubble: View {
                     .foregroundColor(.blue)
                     .frame(width: 32, height: 32)
                     .background(Color.blue.opacity(0.1))
+                    .clipShape(Circle())
+            } else if let path = userProfilePicturePath, let nsImage = NSImage(contentsOfFile: path) {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 32, height: 32)
                     .clipShape(Circle())
             }
             

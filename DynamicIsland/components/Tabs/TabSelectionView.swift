@@ -78,6 +78,11 @@ struct TabSelectionView: View {
             tabsArray.append(TabModel(label: "Stats", icon: "chart.xyaxis.line", view: .stats))
         }
 
+        // Screen Time tab
+        if Defaults[.enableScreenTime] {
+            tabsArray.append(TabModel(label: "Screen Time", icon: "hourglass", view: .screenTime))
+        }
+
         if Defaults[.enableNotes] || (Defaults[.enableClipboardManager] && Defaults[.clipboardDisplayMode] == .separateTab) {
             let label = Defaults[.enableNotes] ? "Notes" : "Clipboard"
             let icon = Defaults[.enableNotes] ? "note.text" : "doc.on.clipboard"

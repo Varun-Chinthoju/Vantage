@@ -24,12 +24,20 @@ import Defaults
 struct IdleAnimationView: View {
     @Default(.selectedIdleAnimation) var selectedAnimation
     @Default(.animationTransformOverrides) var overrides
+    @Default(.userProfilePicturePath) var userProfilePicturePath
     
     var body: some View {
         Group {
             if let animation = selectedAnimation {
                 AnimationContentView(animation: animation)
                     .id("\(animation.id)-\(overrides[animation.id.uuidString]?.hashValue ?? 0)")  // Force recreation when override changes
+            } else if let path = userProfilePicturePath, let nsImage = NSImage(contentsOfFile: path) {
+                // Fallback to user profile picture if set
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 30, height: 30)
+                    .clipShape(Circle())
             } else {
                 // Fallback to original face if nothing selected
                 MinimalFaceFeatures(height: 20, width: 30)

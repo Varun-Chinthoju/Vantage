@@ -82,6 +82,11 @@ func enabledStandardTabCount() -> Int {
         count += 1
     }
 
+    // Screen Time tab
+    if Defaults[.enableScreenTime] {
+        count += 1
+    }
+
     // Notes / Clipboard tab
     if Defaults[.enableNotes] || (Defaults[.enableClipboardManager] && Defaults[.clipboardDisplayMode] == .separateTab) {
         count += 1

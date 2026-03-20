@@ -13027,7 +13027,7 @@
         }
       }
     },
-    "Atoll" : {
+    "Vantage" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -13044,13 +13044,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Atoll"
+            "value" : "Vantage"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Atoll"
+            "value" : "Vantage"
           }
         },
         "en-GB" : {
@@ -13074,7 +13074,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Atoll"
+            "value" : "Vantage"
           }
         },
         "gu" : {
@@ -13157,35 +13157,35 @@
         }
       }
     },
-    "Atoll needs access to save and read AI assistant files." : {
+    "Vantage needs access to save and read AI assistant files." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Atoll benötigt Zugriff, um AI-Assistent-Dateien zu speichern und zu lesen."
+            "value" : "Vantage benötigt Zugriff, um AI-Assistent-Dateien zu speichern und zu lesen."
           }
         }
       }
     },
-    "Atoll needs access to save screenshots to your desktop." : {
+    "Vantage needs access to save screenshots to your desktop." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Atoll benötigt Zugriff, um Screenshots auf Ihrem Desktop zu speichern."
+            "value" : "Vantage benötigt Zugriff, um Screenshots auf Ihrem Desktop zu speichern."
           }
         }
       }
     },
-    "Atoll needs Bluetooth access to detect when audio devices connect and display their battery status in the HUD." : {
+    "Vantage needs Bluetooth access to detect when audio devices connect and display their battery status in the HUD." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Atoll benötigt Bluetooth-Zugriff, um zu erkennen, wenn Audiogeräte verbunden werden, und deren Akkustatus im HUD anzuzeigen."
+            "value" : "Vantage benötigt Bluetooth-Zugriff, um zu erkennen, wenn Audiogeräte verbunden werden, und deren Akkustatus im HUD anzuzeigen."
           }
         },
         "gu" : {
@@ -13196,13 +13196,13 @@
         }
       }
     },
-    "Atoll uses AppleScripts to control Spotify and Apple Music" : {
+    "Vantage uses AppleScripts to control Spotify and Apple Music" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Atoll verwendet AppleScripts zur Steuerung von Spotify und Apple Music."
+            "value" : "Vantage verwendet AppleScripts zur Steuerung von Spotify und Apple Music."
           }
         },
         "gu" : {
@@ -15063,7 +15063,7 @@
         }
       }
     },
-    "Blue dashed box shows actual size in Atoll" : {
+    "Blue dashed box shows actual size in Vantage" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -15080,13 +15080,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blau gestriffelte Box zeigt die tatsächliche Größe im Atoll an"
+            "value" : "Blau gestriffelte Box zeigt die tatsächliche Größe im Vantage an"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blue dashed box shows actual size in Atoll"
+            "value" : "Blue dashed box shows actual size in Vantage"
           }
         },
         "en-GB" : {
@@ -15098,7 +15098,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La caja de puntos azul muestra el tamaño real en Atoll"
+            "value" : "La caja de puntos azul muestra el tamaño real en Vantage"
           }
         },
         "fi" : {
@@ -15110,7 +15110,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La boîte bleue en pointillés affiche la taille actuelle dans la Atoll"
+            "value" : "La boîte bleue en pointillés affiche la taille actuelle dans la Vantage"
           }
         },
         "gu" : {
@@ -19154,7 +19154,7 @@
         }
       }
     },
-    "Choose animation to display when Atoll is idle. Tap to select, hold to delete custom animations." : {
+    "Choose animation to display when Vantage is idle. Tap to select, hold to delete custom animations." : {
       "comment" : "A footer label under the section that lists their idle animations.",
       "localizations" : {
         "ar" : {
@@ -19166,19 +19166,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vyberte animaci, která se zobrazí, když je Atoll nečinný. Klepnutím vyberte, podržením smažte vlastní animace."
+            "value" : "Vyberte animaci, která se zobrazí, když je Vantage nečinný. Klepnutím vyberte, podržením smažte vlastní animace."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wählen Sie die Animation aus, die angezeigt werden soll, wenn Atoll im Leerlauf ist. Tippen Sie zum Auswählen und halten Sie zum Löschen benutzerdefinierter Animationen gedrückt."
+            "value" : "Wählen Sie die Animation aus, die angezeigt werden soll, wenn Vantage im Leerlauf ist. Tippen Sie zum Auswählen und halten Sie zum Löschen benutzerdefinierter Animationen gedrückt."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Choose animation to display when Atoll is idle. Tap to select, hold to delete custom animations."
+            "value" : "Choose animation to display when Vantage is idle. Tap to select, hold to delete custom animations."
           }
         },
         "en-GB" : {
@@ -19190,19 +19190,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elige la animación para que se muestre cuando Atoll esté inactivo. Toque para seleccionar, mantenga presionado para eliminar animaciones personalizadas."
+            "value" : "Elige la animación para que se muestre cuando Vantage esté inactivo. Toque para seleccionar, mantenga presionado para eliminar animaciones personalizadas."
           }
         },
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Valitse animaatio, joka näytetään, kun Atoll on lepotilassa. Napauta valitaksesi, pidä painettuna poistaaksesi mukautetut animaatiot."
+            "value" : "Valitse animaatio, joka näytetään, kun Vantage on lepotilassa. Napauta valitaksesi, pidä painettuna poistaaksesi mukautetut animaatiot."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choisir une animation à afficher lorsque la Atoll est inactive. Touchez pour sélectionner, maintenez pour supprimer."
+            "value" : "Choisir une animation à afficher lorsque la Vantage est inactive. Touchez pour sélectionner, maintenez pour supprimer."
           }
         },
         "gu" : {
@@ -19238,7 +19238,7 @@
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Velg animasjon som skal vises når Atoll er inaktiv. Trykk for å velge, hold nede for å slette tilpassede animasjoner."
+            "value" : "Velg animasjon som skal vises når Vantage er inaktiv. Trykk for å velge, hold nede for å slette tilpassede animasjoner."
           }
         },
         "pl" : {
@@ -19262,7 +19262,7 @@
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Välj animation som ska visas när Atoll är inaktiv. Tryck för att välja, håll ned för att radera anpassade animationer."
+            "value" : "Välj animation som ska visas när Vantage är inaktiv. Tryck för att välja, håll ned för att radera anpassade animationer."
           }
         },
         "ta" : {
@@ -19286,7 +19286,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选择在Atoll闲置时显示的动画效果。轻点选择，长按删除自定义动画。"
+            "value" : "选择在Vantage闲置时显示的动画效果。轻点选择，长按删除自定义动画。"
           }
         }
       }
@@ -34348,7 +34348,7 @@
         }
       }
     },
-    "Enable built-in system monitoring to replace macOS HUD notifications with Atoll displays." : {
+    "Enable built-in system monitoring to replace macOS HUD notifications with Vantage displays." : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
@@ -34360,7 +34360,7 @@
         "be" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Уключыце ўбудаваны маніторынг сістэмы, каб замяніць апавяшчэнні HUD macOS на дысплеі Atoll."
+            "value" : "Уключыце ўбудаваны маніторынг сістэмы, каб замяніць апавяшчэнні HUD macOS на дысплеі Vantage."
           }
         },
         "cs" : {
@@ -34372,13 +34372,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aktivieren Sie die integrierte Systemüberwachung, um macOS HUD-Benachrichtigungen durch Atoll-Displays zu ersetzen."
+            "value" : "Aktivieren Sie die integrierte Systemüberwachung, um macOS HUD-Benachrichtigungen durch Vantage-Displays zu ersetzen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Enable built-in system monitoring to replace macOS HUD notifications with Atoll displays."
+            "value" : "Enable built-in system monitoring to replace macOS HUD notifications with Vantage displays."
           }
         },
         "en-GB" : {
@@ -34390,7 +34390,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Habilite la supervisión del sistema integrado para reemplazar las notificaciones de macOS HUD con pantallas Atoll."
+            "value" : "Habilite la supervisión del sistema integrado para reemplazar las notificaciones de macOS HUD con pantallas Vantage."
           }
         },
         "fi" : {
@@ -34402,7 +34402,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Activez le système de suivi intégré pour remplacer les notifications macOS avec celles de Atoll."
+            "value" : "Activez le système de suivi intégré pour remplacer les notifications macOS avec celles de Vantage."
           }
         },
         "gu" : {
@@ -34414,7 +34414,7 @@
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "macOS HUD सूचनाओं को Atoll डिस्प्ले से बदलने के लिए अंतर्निहित सिस्टम निगरानी सक्षम करें।"
+            "value" : "macOS HUD सूचनाओं को Vantage डिस्प्ले से बदलने के लिए अंतर्निहित सिस्टम निगरानी सक्षम करें।"
           }
         },
         "hu" : {
@@ -34468,13 +34468,13 @@
         "ta" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "macOS HUD அறிவிப்புகளுக்குப் பதிலாக Atoll காட்சிகளைப் பயன்படுத்த, உள்ளமைக்கப்பட்ட சிஸ்டம் கண்காணிப்பை இயக்கவும்."
+            "value" : "macOS HUD அறிவிப்புகளுக்குப் பதிலாக Vantage காட்சிகளைப் பயன்படுத்த, உள்ளமைக்கப்பட்ட சிஸ்டம் கண்காணிப்பை இயக்கவும்."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "macOS HUD bildirimlerini Atoll ekranlarıyla değiştirmek için yerleşik sistem izlemeyi etkinleştirin."
+            "value" : "macOS HUD bildirimlerini Vantage ekranlarıyla değiştirmek için yerleşik sistem izlemeyi etkinleştirin."
           }
         },
         "uk" : {
@@ -67205,7 +67205,7 @@
       }
     },
     "Recording Detected" : {
-      "comment" : "A text description of a red dot displayed in the Atoll header when screen recording is active.",
+      "comment" : "A text description of a red dot displayed in the Vantage header when screen recording is active.",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -68938,7 +68938,7 @@
         }
       }
     },
-    "Restart Atoll" : {
+    "Restart Vantage" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -68955,13 +68955,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Atoll Neu Starten"
+            "value" : "Vantage Neu Starten"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Restart Atoll"
+            "value" : "Restart Vantage"
           }
         },
         "en-GB" : {
@@ -68985,7 +68985,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Relancer Atoll"
+            "value" : "Relancer Vantage"
           }
         },
         "gu" : {
@@ -90291,7 +90291,7 @@
         }
       }
     },
-    "When enabled, the Atoll will expand horizontally to match the animation size" : {
+    "When enabled, the Vantage will expand horizontally to match the animation size" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -90302,19 +90302,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pokud je tato funkce povolena, Atoll se rozbalí horizontálně tak, aby odpovídal velikosti animace."
+            "value" : "Pokud je tato funkce povolena, Vantage se rozbalí horizontálně tak, aby odpovídal velikosti animace."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wenn aktiviert, erweitert sich das Atoll horizontal, um der Animationsgröße zu entsprechen"
+            "value" : "Wenn aktiviert, erweitert sich das Vantage horizontal, um der Animationsgröße zu entsprechen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "When enabled, the Atoll will expand horizontally to match the animation size"
+            "value" : "When enabled, the Vantage will expand horizontally to match the animation size"
           }
         },
         "en-GB" : {
@@ -90338,7 +90338,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lorsqu'il est activé, l'atoll se développe horizontalement pour correspondre à la taille de l'animation"
+            "value" : "Lorsqu'il est activé, l'vantage se développe horizontalement pour correspondre à la taille de l'animation"
           }
         },
         "gu" : {
@@ -90362,7 +90362,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Quando abilitato, l'atollo si espanderà orizzontalmente per corrispondere alla dimensione dell'animazione"
+            "value" : "Quando abilitato, l'vantageo si espanderà orizzontalmente per corrispondere alla dimensione dell'animazione"
           }
         },
         "ko" : {
@@ -90374,13 +90374,13 @@
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Når denne funksjonen er aktivert, vil Atoll utvides horisontalt for å tilpasse seg animasjonens størrelse."
+            "value" : "Når denne funksjonen er aktivert, vil Vantage utvides horisontalt for å tilpasse seg animasjonens størrelse."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Po włączeniu Atoll rozszerzy się poziomo, aby dopasować się do rozmiaru animacji."
+            "value" : "Po włączeniu Vantage rozszerzy się poziomo, aby dopasować się do rozmiaru animacji."
           }
         },
         "pt-BR" : {
@@ -90410,7 +90410,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Etkinleştirildiğinde, Atoll animasyon boyutuna uyacak şekilde yatay olarak genişleyecektir"
+            "value" : "Etkinleştirildiğinde, Vantage animasyon boyutuna uyacak şekilde yatay olarak genişleyecektir"
           }
         },
         "uk" : {
@@ -91226,7 +91226,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Etkinleştirildiğinde, Atoll animasyon boyutuna uyacak şekilde yatay olarak genişleyecektir"
+            "value" : "Etkinleştirildiğinde, Vantage animasyon boyutuna uyacak şekilde yatay olarak genişleyecektir"
           }
         },
         "uk" : {

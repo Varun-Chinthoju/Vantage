@@ -52,14 +52,14 @@ struct ProfileSelectionView: View {
             icon: "sparkles",
             description: String(localized: "Simple and minimal interface with just the essentials for everyday tasks."),
             gradient: [Color.green, Color.mint]
-        ),
-        UserProfile(
+            ),
+            UserProfile(
             id: "student",
             name: String(localized: "Student"),
             icon: "book.fill",
-            description: String(localized: "Stay organized with calendar, timer, and battery monitoring."),
-            gradient: [Color.indigo, Color.cyan]
-        )
+            description: String(localized: "Stay focused with timers, Pomodoro, calendar integration, and Vantage as your study companion."),
+            gradient: [Color.indigo, Color.purple]
+            )
     ]
     
     var body: some View {

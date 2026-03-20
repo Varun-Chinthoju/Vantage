@@ -102,8 +102,8 @@ struct ContentView: View {
             return CGSize(width: baseSize.width, height: 250) // Extra height for timer presets
         }
         
-        if coordinator.currentView == .notes || coordinator.currentView == .clipboard {
-            let preferredHeight = coordinator.notesLayoutState.preferredHeight
+        if coordinator.currentView == .notes || coordinator.currentView == .clipboard || coordinator.currentView == .screenTime {
+            let preferredHeight = coordinator.currentView == .screenTime ? 300 : coordinator.notesLayoutState.preferredHeight
             let resolvedHeight = max(baseSize.height, preferredHeight)
             return CGSize(width: baseSize.width, height: resolvedHeight)
         }
@@ -847,9 +847,10 @@ struct ContentView: View {
                                   NotchTimerView()
                               case .stats:
                                   NotchStatsView()
+                              case .screenTime:
+                                  NotchScreenTimeView()
                               case .colorPicker:
-                                  NotchColorPickerView()
-                            case .notes:
+                                  NotchColorPickerView()                            case .notes:
                                 NotchNotesView()
                             case .clipboard:
                                 NotchNotesView()

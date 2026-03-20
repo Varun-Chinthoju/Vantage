@@ -58,6 +58,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case hudAndOSD
     case battery
     case stats
+    case screenTime
     case clipboard
     case screenAssistant
     case colorPicker
@@ -79,7 +80,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .timer, .calendar, .notes:                                      return .productivity
         case .clipboard, .screenAssistant, .colorPicker, .shelf,
              .downloads, .shortcuts:                                         return .utilities
-        case .stats, .terminal:                                              return .developer
+        case .stats, .screenTime, .terminal:                                              return .developer
         case .extensions:                                                    return .integrations
         case .about:                                                         return .info
         }
@@ -99,6 +100,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .hudAndOSD: return "Controls"
         case .battery: return "Battery"
         case .stats: return "Stats"
+        case .screenTime: return "Screen Time"
         case .clipboard: return "Clipboard"
         case .screenAssistant: return "Screen Assistant"
         case .colorPicker: return "Color Picker"
@@ -125,6 +127,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .hudAndOSD: return "dial.medium.fill"
         case .battery: return "battery.100.bolt"
         case .stats: return "chart.xyaxis.line"
+        case .screenTime: return "hourglass"
         case .clipboard: return "clipboard"
         case .screenAssistant: return "brain.head.profile"
         case .colorPicker: return "eyedropper"
@@ -151,6 +154,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .hudAndOSD: return .indigo
         case .battery: return Color(red: 0.202, green: 0.783, blue: 0.348, opacity: 1.000)
         case .stats: return .teal
+        case .screenTime: return .indigo
         case .clipboard: return .mint
         case .screenAssistant: return .pink
         case .colorPicker: return .accentColor
@@ -857,6 +861,9 @@ struct SettingsView: View {
             SettingsSearchEntry(tab: .stats, title: "Network Activity", keywords: ["network", "graph"], highlightID: SettingsTab.stats.highlightID(for: "Network Activity")),
             SettingsSearchEntry(tab: .stats, title: "Disk I/O", keywords: ["disk", "io"], highlightID: SettingsTab.stats.highlightID(for: "Disk I/O")),
 
+            // Screen Time
+            SettingsSearchEntry(tab: .screenTime, title: "Enable Screen Time tracking", keywords: ["screen time", "usage", "tracking"], highlightID: SettingsTab.screenTime.highlightID(for: "Enable Screen Time tracking")),
+
             // Clipboard
             SettingsSearchEntry(tab: .clipboard, title: "Enable Clipboard Manager", keywords: ["clipboard", "manager"], highlightID: SettingsTab.clipboard.highlightID(for: "Enable Clipboard Manager")),
             SettingsSearchEntry(tab: .clipboard, title: "Show Clipboard Icon", keywords: ["icon", "clipboard"], highlightID: SettingsTab.clipboard.highlightID(for: "Show Clipboard Icon")),
@@ -893,7 +900,7 @@ struct SettingsView: View {
 
     private func isTabVisible(_ tab: SettingsTab) -> Bool {
         switch tab {
-        case .timer, .stats, .clipboard, .screenAssistant, .colorPicker, .shelf, .notes, .terminal:
+        case .timer, .stats, .screenTime, .clipboard, .screenAssistant, .colorPicker, .shelf, .notes, .terminal:
             return !enableMinimalisticUI
         default:
             return true
@@ -950,6 +957,10 @@ struct SettingsView: View {
         case .stats:
             SettingsForm(tab: .stats) {
                 StatsSettings()
+            }
+        case .screenTime:
+            SettingsForm(tab: .screenTime) {
+                ScreenTimeSettings()
             }
         case .clipboard:
             SettingsForm(tab: .clipboard) {
@@ -1976,7 +1987,7 @@ private struct BetterDisplayIntegrationSection: View {
                 .settingsHighlight(id: highlightID("BetterDisplay integration"))
 
                 if !betterDisplayManager.isDetected {
-                    Text("Install [BetterDisplay](https://betterdisplay.pro) to control external display brightness and volume through Atoll's HUD.")
+                    Text("Install [BetterDisplay](https://betterdisplay.pro) to control external display brightness and volume through Vantage's HUD.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else if !betterDisplayManager.isRunning {
@@ -1984,11 +1995,11 @@ private struct BetterDisplayIntegrationSection: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else if enableBetterDisplayIntegration {
-                    Text("BetterDisplay OSD events will be routed through Atoll's active HUD style. Make sure BetterDisplay's OSD integration is enabled in its Settings › Application › Integration.")
+                    Text("BetterDisplay OSD events will be routed through Vantage's active HUD style. Make sure BetterDisplay's OSD integration is enabled in its Settings › Application › Integration.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else {
-                    Text("Enable to route BetterDisplay's brightness and volume changes through Atoll's HUD instead of the system OSD.")
+                    Text("Enable to route BetterDisplay's brightness and volume changes through Vantage's HUD instead of the system OSD.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -2008,7 +2019,7 @@ private struct BetterDisplayIntegrationSection: View {
                     Text("BetterDisplay Integration")
                 }
             } footer: {
-                Text("When enabled, Atoll listens for OSD notifications from BetterDisplay and displays them using your selected HUD style above. This works alongside the existing media key interception — BetterDisplay handles external display controls while Atoll provides the visual feedback.")
+                Text("When enabled, Vantage listens for OSD notifications from BetterDisplay and displays them using your selected HUD style above. This works alongside the existing media key interception — BetterDisplay handles external display controls while Vantage provides the visual feedback.")
                     .foregroundStyle(.secondary)
                     .font(.caption)
             }
@@ -6442,6 +6453,61 @@ struct StatsSettings: View {
     }
 }
 
+struct ScreenTimeSettings: View {
+    @ObservedObject var screenTimeManager = ScreenTimeManager.shared
+    @Default(.enableScreenTime) var enableScreenTime
+    
+    private func highlightID(_ title: String) -> String {
+        SettingsTab.screenTime.highlightID(for: title)
+    }
+    
+    var body: some View {
+        Form {
+            Section {
+                Defaults.Toggle("Enable Screen Time tracking", key: .enableScreenTime)
+                    .settingsHighlight(id: highlightID("Enable Screen Time tracking"))
+            } header: {
+                Text("General")
+            } footer: {
+                Text("When enabled, Vantage will track how much time you spend in each application. This data is stored locally on your Mac.")
+                    .multilineTextAlignment(.trailing)
+                    .foregroundStyle(.secondary)
+                    .font(.caption)
+            }
+            
+            if enableScreenTime {
+                Section {
+                    ForEach(screenTimeManager.sortedUsages.prefix(20)) { usage in
+                        HStack {
+                            Text(usage.appName)
+                            Spacer()
+                            Text(usage.formattedDuration)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    
+                    if screenTimeManager.appUsages.isEmpty {
+                        Text("No data recorded yet.")
+                            .foregroundStyle(.secondary)
+                            .italic()
+                    }
+                } header: {
+                    Text("Top Applications")
+                }
+                
+                Section {
+                    Button("Reset Screen Time Stats", role: .destructive) {
+                        screenTimeManager.resetStats()
+                    }
+                } header: {
+                    Text("Data Management")
+                }
+            }
+        }
+        .navigationTitle("Screen Time")
+    }
+}
+
 struct ClipboardSettings: View {
     @ObservedObject var clipboardManager = ClipboardManager.shared
     @Default(.enableClipboardManager) var enableClipboardManager
@@ -6615,8 +6681,10 @@ struct ScreenAssistantSettings: View {
     @Default(.enableScreenAssistant) var enableScreenAssistant
     @Default(.screenAssistantDisplayMode) var screenAssistantDisplayMode
     @Default(.geminiApiKey) var geminiApiKey
+    @Default(.userProfilePicturePath) var userProfilePicturePath
     @State private var apiKeyText = ""
     @State private var showingApiKey = false
+    @State private var showingFilePicker = false
     
     private func highlightID(_ title: String) -> String {
         SettingsTab.screenAssistant.highlightID(for: title)
@@ -6635,6 +6703,42 @@ struct ScreenAssistantSettings: View {
             
             if enableScreenAssistant {
                 Section {
+                    HStack {
+                        Text("User Profile Picture")
+                        Spacer()
+                        if let path = userProfilePicturePath, let _ = NSImage(contentsOfFile: path) {
+                            Text("Set")
+                                .foregroundColor(.green)
+                        } else {
+                            Text("Not Set")
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Button(userProfilePicturePath == nil ? "Select" : "Change") {
+                            showingFilePicker = true
+                        }
+                        
+                        if userProfilePicturePath != nil {
+                            Button("Clear") {
+                                userProfilePicturePath = nil
+                            }
+                        }
+                    }
+                    .fileImporter(
+                        isPresented: $showingFilePicker,
+                        allowedContentTypes: [.image],
+                        allowsMultipleSelection: false
+                    ) { result in
+                        switch result {
+                        case .success(let urls):
+                            if let url = urls.first {
+                                userProfilePicturePath = url.path
+                            }
+                        case .failure(let error):
+                            print("Error selecting profile picture: \(error)")
+                        }
+                    }
+                    
                     HStack {
                         Text("Gemini API Key")
                         Spacer()
