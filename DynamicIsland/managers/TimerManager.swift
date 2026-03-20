@@ -160,6 +160,7 @@ class TimerManager: ObservableObject {
         lastUpdated = Date()
 
         activePresetId = preset?.id
+        updateFocusModeState()
         
         // Start countdown timer
         timerInstance = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -175,6 +176,7 @@ class TimerManager: ObservableObject {
                     } else if self.remainingTime == 0 {
                         // Timer just finished - play sound and start overtime
                         self.isFinished = true
+                        self.updateFocusModeState()
                         self.isOvertime = true
                         self.playTimerSound()
                         self.remainingTime = -1
@@ -233,6 +235,7 @@ class TimerManager: ObservableObject {
         isPaused = true
         timerInstance?.invalidate()
         timerInstance = nil
+        updateFocusModeState()
     }
     
     func resumeTimer() {
@@ -240,6 +243,7 @@ class TimerManager: ObservableObject {
         guard isTimerActive && isPaused else { return }
         isPaused = false
         lastUpdated = Date()
+        updateFocusModeState()
         
         // Resume countdown timer with same logic as start timer
         timerInstance = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -354,6 +358,7 @@ class TimerManager: ObservableObject {
         isOvertime = false
         activePresetId = nil
         activeSource = .none
+        updateFocusModeState()
     }
 
     // MARK: - Derived State
@@ -423,6 +428,15 @@ class TimerManager: ObservableObject {
         } catch {
             // Fallback to system sound if there's an error playing the custom sound
             NSSound.beep()
+        }
+    }
+    
+    // MARK: - Pomodoro / Focus Mode
+    func updateFocusModeState() {
+        if isTimerActive && !isPaused && !isFinished && (activePreset?.name == "Focus" || activePreset?.name == "Deep Work" || activePreset?.name == String(localized: "Focus") || activePreset?.name == String(localized: "Deep Work")) {
+            ScreenTimeManager.shared.isFocusModeActive = true
+        } else {
+            ScreenTimeManager.shared.isFocusModeActive = false
         }
     }
     
