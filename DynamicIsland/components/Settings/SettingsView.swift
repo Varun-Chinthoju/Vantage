@@ -797,6 +797,7 @@ struct SettingsView: View {
             SettingsSearchEntry(tab: .appearance, title: "App icon", keywords: ["app icon", "custom icon"], highlightID: SettingsTab.appearance.highlightID(for: "App icon")),
 
             // Lock Screen
+            SettingsSearchEntry(tab: .lockScreen, title: "Show Welcome Greeting on unlock", keywords: ["welcome", "greeting", "unlock", "good morning"], highlightID: SettingsTab.lockScreen.highlightID(for: "Show Welcome Greeting on unlock")),
             SettingsSearchEntry(tab: .lockScreen, title: "Preview lock screen widgets", keywords: ["preview", "lock screen", "widgets"], highlightID: SettingsTab.lockScreen.highlightID(for: "Preview lock screen widgets")),
             SettingsSearchEntry(tab: .lockScreen, title: "Enable lock screen live activity", keywords: ["lock screen", "live activity"], highlightID: SettingsTab.lockScreen.highlightID(for: "Enable lock screen live activity")),
             SettingsSearchEntry(tab: .lockScreen, title: "Play lock/unlock sounds", keywords: ["chime", "sound"], highlightID: SettingsTab.lockScreen.highlightID(for: "Play lock/unlock sounds")),
@@ -863,6 +864,8 @@ struct SettingsView: View {
 
             // Screen Time
             SettingsSearchEntry(tab: .screenTime, title: "Enable Screen Time tracking", keywords: ["screen time", "usage", "tracking"], highlightID: SettingsTab.screenTime.highlightID(for: "Enable Screen Time tracking")),
+            SettingsSearchEntry(tab: .screenTime, title: "Reset Time", keywords: ["screen time", "reset", "daily", "midnight"], highlightID: SettingsTab.screenTime.highlightID(for: "Reset Time")),
+            SettingsSearchEntry(tab: .screenTime, title: "Distracting Apps", keywords: ["pomodoro", "focus", "block", "distracting"], highlightID: SettingsTab.screenTime.highlightID(for: "Distracting Apps")),
 
             // Clipboard
             SettingsSearchEntry(tab: .clipboard, title: "Enable Clipboard Manager", keywords: ["clipboard", "manager"], highlightID: SettingsTab.clipboard.highlightID(for: "Enable Clipboard Manager")),
@@ -4284,6 +4287,8 @@ struct LockScreenSettings: View {
                     .settingsHighlight(id: highlightID("Enable lock screen live activity"))
                 Defaults.Toggle("Play lock/unlock sounds", key: .enableLockSounds)
                     .settingsHighlight(id: highlightID("Play lock/unlock sounds"))
+                Defaults.Toggle("Show Welcome Greeting on unlock", key: .enableWelcomeGreeting)
+                    .settingsHighlight(id: highlightID("Show Welcome Greeting on unlock"))
             } header: {
                 Text("Live Activity & Feedback")
             } footer: {
@@ -6456,6 +6461,7 @@ struct StatsSettings: View {
 struct ScreenTimeSettings: View {
     @ObservedObject var screenTimeManager = ScreenTimeManager.shared
     @Default(.enableScreenTime) var enableScreenTime
+    @Default(.screenTimeResetHour) var screenTimeResetHour
     
     private func highlightID(_ title: String) -> String {
         SettingsTab.screenTime.highlightID(for: title)
@@ -6466,11 +6472,38 @@ struct ScreenTimeSettings: View {
             Section {
                 Defaults.Toggle("Enable Screen Time tracking", key: .enableScreenTime)
                     .settingsHighlight(id: highlightID("Enable Screen Time tracking"))
+                
+                if enableScreenTime {
+                    Picker("Reset time", selection: $screenTimeResetHour) {
+                        ForEach(0..<24) { hour in
+                            Text("\(hour):00")
+                                .tag(hour)
+                        }
+                    }
+                    .settingsHighlight(id: highlightID("Reset Time"))
+                }
             } header: {
                 Text("General")
             } footer: {
                 Text("When enabled, Vantage will track how much time you spend in each application. This data is stored locally on your Mac.")
                     .multilineTextAlignment(.trailing)
+                    .foregroundStyle(.secondary)
+                    .font(.caption)
+            }
+            
+            Section {
+                TextField("E.g., Safari, Twitter, Discord", text: Binding(
+                    get: { Defaults[.distractingApps].joined(separator: ", ") },
+                    set: { newValue in
+                        Defaults[.distractingApps] = newValue.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                    }
+                ))
+                .settingsHighlight(id: highlightID("Distracting Apps"))
+            } header: {
+                Text("Distracting Apps (Pomodoro)")
+            } footer: {
+                Text("Apps listed here will be blocked during an active Pomodoro work session.")
+                    .multilineTextAlignment(.leading)
                     .foregroundStyle(.secondary)
                     .font(.caption)
             }
