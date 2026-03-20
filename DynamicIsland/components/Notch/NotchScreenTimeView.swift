@@ -72,6 +72,7 @@ struct AppUsageRow: View {
     let icon: NSImage?
     
     @ObservedObject var screenTimeManager = ScreenTimeManager.shared
+    @EnvironmentObject var vm: DynamicIslandViewModel
     @State private var showLimitPopover = false
     @State private var limitString = ""
     
@@ -145,6 +146,14 @@ struct AppUsageRow: View {
                 }
                 .padding()
                 .frame(width: 150)
+            }
+            .onChange(of: showLimitPopover) { isActive in
+                vm.isScreenTimePopoverActive = isActive
+                if !isActive {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        vm.shouldRecheckHover.toggle()
+                    }
+                }
             }
         }
         .padding(8)
