@@ -1065,6 +1065,10 @@ extension Defaults.Keys {
     // MARK: Lock Screen Features
     static let enableLockScreenLiveActivity = Key<Bool>("enableLockScreenLiveActivity", default: true)
     static let enableLockSounds = Key<Bool>("enableLockSounds", default: true)
+    static let enableWelcomeGreeting = Key<Bool>("enableWelcomeGreeting", default: true)
+    
+    // MARK: Pomodoro Focus Mode
+    static let distractingApps = Key<[String]>("distractingApps", default: ["Safari", "Google Chrome", "Messages", "Mail", "Twitter", "Discord", "Twitter", "Instagram", "Facebook", "X", "TikTok"])
     
     // MARK: Caps Lock Indicator
     static let enableCapsLockIndicator = Key<Bool>("enableCapsLockIndicator", default: true)
@@ -1094,6 +1098,8 @@ extension Defaults.Keys {
     // MARK: Screen Time
     static let screenTimeData = Key<[String: AppUsage]>("screenTimeData", default: [:])
     static let enableScreenTime = Key<Bool>("enableScreenTime", default: true)
+    static let lastScreenTimeResetDate = Key<Date?>("lastScreenTimeResetDate", default: nil)
+    static let screenTimeResetHour = Key<Int>("screenTimeResetHour", default: 0) // Midnight by default
     
     // MARK: User Profile
     static let userProfilePicturePath = Key<String?>("userProfilePicturePath", default: nil)
