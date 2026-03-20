@@ -132,11 +132,16 @@ final class LockScreenTimerWidgetPanelManager {
     static let shared = LockScreenTimerWidgetPanelManager()
     static let hideAnimationDurationNanoseconds: UInt64 = 360_000_000
 
-    private var window: NSWindow?
-    private var hasDelegated = false
+    private var windows: [NSScreen: NSWindow] = [:]
+    private var hasDelegated: [NSScreen: Bool] = [:]
     private let animator = LockScreenTimerWidgetAnimator()
     private var hideTask: Task<Void, Never>?
-    private(set) var latestFrame: NSRect?
+    private var latestFrames: [NSScreen: NSRect] = [:]
+
+    func latestFrame(for screen: NSScreen) -> NSRect? {
+        return latestFrames[screen]
+    }
+
     private var screenChangeObserver: NSObjectProtocol?
     private var workspaceObservers: [NSObjectProtocol] = []
 
@@ -145,42 +150,43 @@ final class LockScreenTimerWidgetPanelManager {
     }
 
     func showWidget() {
-        guard let screen = currentScreen() else { return }
-        let window = ensureWindow()
-        let frame = targetFrame(on: screen)
-        window.setFrame(frame, display: true)
-        updateHostingViewSize(for: window, size: frame.size)
-        latestFrame = frame
-        window.alphaValue = 1
-        window.orderFrontRegardless()
         hideTask?.cancel()
         hideTask = nil
         animator.isPresented = true
+        for screen in NSScreen.screens {
+            let window = ensureWindow(for: screen)
+            let frame = targetFrame(on: screen)
+            window.setFrame(frame, display: true)
+            updateHostingViewSize(for: window, size: frame.size)
+            latestFrames[screen] = frame
+            window.alphaValue = 1
+            window.orderFrontRegardless()
+        }
         LockScreenPanelManager.shared.notifyTimerWidgetFrameChanged(animated: false)
         LockScreenReminderWidgetPanelManager.shared.refreshPosition(animated: true)
     }
 
     func hide(animated: Bool = true) {
-        guard let window else { return }
         hideTask?.cancel()
         animator.isPresented = false
 
         let delay: UInt64 = animated ? Self.hideAnimationDurationNanoseconds : 0
         if delay == 0 {
-            window.orderOut(nil)
+            for window in windows.values { window.orderOut(nil) }
             hideTask = nil
-            latestFrame = nil
+            latestFrames.removeAll()
             LockScreenPanelManager.shared.notifyTimerWidgetFrameChanged(animated: true)
             LockScreenReminderWidgetPanelManager.shared.refreshPosition(animated: true)
             return
         }
 
-        hideTask = Task { [weak window, weak self] in
+        hideTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: delay)
             await MainActor.run {
-                window?.orderOut(nil)
-                self?.hideTask = nil
-                self?.latestFrame = nil
+                guard let self else { return }
+                for window in self.windows.values { window.orderOut(nil) }
+                self.hideTask = nil
+                self.latestFrames.removeAll()
                 LockScreenPanelManager.shared.notifyTimerWidgetFrameChanged(animated: true)
                 LockScreenReminderWidgetPanelManager.shared.refreshPosition(animated: true)
             }
@@ -189,29 +195,32 @@ final class LockScreenTimerWidgetPanelManager {
 
 
     func refreshPosition(animated: Bool) {
-        guard let window, window.isVisible, let screen = currentScreen() else { return }
-        let frame = targetFrame(on: screen)
-        if animated {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.22
-                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                window.animator().setFrame(frame, display: true)
+        for (screen, window) in windows {
+            guard window.isVisible else { continue }
+            let frame = targetFrame(on: screen)
+            if animated {
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.22
+                    context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                    window.animator().setFrame(frame, display: true)
+                }
+            } else {
+                window.setFrame(frame, display: true)
             }
-        } else {
-            window.setFrame(frame, display: true)
+            updateHostingViewSize(for: window, size: frame.size)
+            latestFrames[screen] = frame
         }
-        updateHostingViewSize(for: window, size: frame.size)
-        latestFrame = frame
         LockScreenReminderWidgetPanelManager.shared.refreshPosition(animated: animated)
     }
 
     func refreshRelativeToMusicPanel(animated: Bool) {
-        guard window?.isVisible == true else { return }
+        let anyVisible = windows.values.contains { $0.isVisible }
+        guard anyVisible else { return }
         refreshPosition(animated: animated)
     }
 
-    private func ensureWindow() -> NSWindow {
-        if let window {
+    private func ensureWindow(for screen: NSScreen) -> NSWindow {
+        if let window = windows[screen] {
             if window.contentView == nil {
                 window.contentView = hostingView()
             }
@@ -238,11 +247,11 @@ final class LockScreenTimerWidgetPanelManager {
 
         ScreenCaptureVisibilityManager.shared.register(newWindow, scope: .entireInterface)
 
-        window = newWindow
+        windows[screen] = newWindow
 
-        if !hasDelegated {
+        if hasDelegated[screen] != true {
             SkyLightOperator.shared.delegateWindow(newWindow)
-            hasDelegated = true
+            hasDelegated[screen] = true
         }
 
         return newWindow
@@ -272,7 +281,7 @@ final class LockScreenTimerWidgetPanelManager {
         let offset = CGFloat(clampedTimerOffset())
         var originY = baseY + offset
 
-        if let weatherFrame = LockScreenWeatherPanelManager.shared.latestFrame {
+        if let weatherFrame = LockScreenWeatherPanelManager.shared.latestFrame(for: screen) {
             originY = min(originY, weatherFrame.minY - size.height - 20)
         } else {
             let topLimit = screen.frame.maxY - size.height - 72
@@ -312,7 +321,8 @@ final class LockScreenTimerWidgetPanelManager {
     }
 
     private func handleScreenGeometryChange(reason: String) {
-        guard window?.isVisible == true else { return }
+        let anyVisible = windows.values.contains { $0.isVisible }
+        guard anyVisible else { return }
         refreshPosition(animated: false)
         print("LockScreenTimerWidgetPanelManager: realigned window due to \(reason)")
     }

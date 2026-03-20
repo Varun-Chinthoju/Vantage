@@ -26,24 +26,18 @@ import QuartzCore
 class LockScreenLiveActivityWindowManager {
     static let shared = LockScreenLiveActivityWindowManager()
 
-    private var window: NSWindow?
-    private var hasDelegated = false
+    private var windows: [NSScreen: NSWindow] = [:]
+    private var hasDelegated: [NSScreen: Bool] = [:]
     private var hideTask: Task<Void, Never>?
-    private var hostingView: NSHostingView<LockScreenLiveActivityOverlay>?
+    private var hostingViews: [NSScreen: NSHostingView<LockScreenLiveActivityOverlay>] = [:]
     private let overlayModel = LockScreenLiveActivityOverlayModel()
     private let overlayAnimator = LockIconAnimator(initiallyLocked: LockScreenManager.shared.isLocked)
     private weak var viewModel: DynamicIslandViewModel?
     private var screenChangeObserver: NSObjectProtocol?
     private var workspaceObservers: [NSObjectProtocol] = []
-    private var currentNotchSize: CGSize?
+    private var currentNotchSizes: [NSScreen: CGSize] = [:]
 
-    /// Whether the target screen uses Dynamic Island (pill) mode.
-    private var isDynamicIslandMode: Bool {
-        isDynamicIslandModeForScreen(lockContext()?.screen)
-    }
-
-    private func isDynamicIslandModeForScreen(_ screen: NSScreen?) -> Bool {
-        guard let screen else { return false }
+    private func isDynamicIslandModeForScreen(_ screen: NSScreen) -> Bool {
         return shouldUseDynamicIslandMode(for: screen.localizedName)
     }
 
@@ -57,9 +51,9 @@ class LockScreenLiveActivityWindowManager {
         return formatter.string(from: Date())
     }
 
-    private func windowSize(for notchSize: CGSize) -> CGSize {
+    private func windowSize(for notchSize: CGSize, isDynamicIslandMode: Bool) -> CGSize {
         let indicatorWidth = max(0, notchSize.height - 12)
-        let horizontalPadding = isDynamicIslandMode ? 8 : cornerRadiusInsets.closed.bottom
+        let horizontalPadding: CGFloat = isDynamicIslandMode ? 8 : cornerRadiusInsets.closed.bottom
         let topOffset: CGFloat = isDynamicIslandMode ? dynamicIslandTopOffset : 0
 
         let totalWidth = notchSize.width + (indicatorWidth * 2) + (horizontalPadding * 2)
@@ -76,7 +70,7 @@ class LockScreenLiveActivityWindowManager {
     }
 
     private func ensureWindow(windowSize: CGSize, screen: NSScreen) -> NSWindow {
-        if let window {
+        if let window = windows[screen] {
             return window
         }
 
@@ -99,28 +93,20 @@ class LockScreenLiveActivityWindowManager {
 
         ScreenCaptureVisibilityManager.shared.register(window, scope: .entireInterface)
 
-        self.window = window
-        self.hasDelegated = false
+        self.windows[screen] = window
+        self.hasDelegated[screen] = false
         return window
     }
 
-    private func lockContext() -> (notchSize: CGSize, screen: NSScreen)? {
-        guard let screen = LockScreenDisplayContextProvider.shared.contextSnapshot()?.screen ?? NSScreen.main else {
-            print("[\(timestamp())] LockScreenLiveActivityWindowManager: no main screen available")
-            return nil
-        }
-
+    private func getNotchSize(for screen: NSScreen) -> CGSize {
         guard let viewModel else {
-            print("[\(timestamp())] LockScreenLiveActivityWindowManager: no view model configured")
-            return nil
+            return getClosedNotchSize(screen: screen.localizedName)
         }
-
         var notchSize = viewModel.closedNotchSize
         if notchSize.width <= 0 || notchSize.height <= 0 {
             notchSize = getClosedNotchSize(screen: screen.localizedName)
         }
-
-        return (notchSize, screen)
+        return notchSize
     }
 
     private func registerScreenChangeObservers() {
@@ -144,77 +130,90 @@ class LockScreenLiveActivityWindowManager {
     }
 
     private func handleScreenGeometryChange(reason: String) {
-        guard let window else { return }
-        guard window.isVisible || window.alphaValue > 0.01 else { return }
-        guard let context = lockContext() else { return }
+        for (screen, window) in windows {
+            guard window.isVisible || window.alphaValue > 0.01 else { continue }
+            let notchSize = getNotchSize(for: screen)
+            let isDI = isDynamicIslandModeForScreen(screen)
+            let windowSize = self.windowSize(for: notchSize, isDynamicIslandMode: isDI)
+            let targetFrame = frame(for: windowSize, on: screen)
+            if window.frame != targetFrame {
+                window.setFrame(targetFrame, display: true)
+            }
 
-        let windowSize = windowSize(for: context.notchSize)
-        let targetFrame = frame(for: windowSize, on: context.screen)
-        if window.frame != targetFrame {
-            window.setFrame(targetFrame, display: true)
+            if let hostingView = hostingViews[screen] {
+                hostingView.frame = CGRect(origin: .zero, size: targetFrame.size)
+                hostingView.rootView = LockScreenLiveActivityOverlay(model: overlayModel, animator: overlayAnimator, notchSize: notchSize, isDynamicIslandMode: isDI)
+            }
+
+            currentNotchSizes[screen] = notchSize
         }
 
-        if let hostingView {
-            hostingView.frame = CGRect(origin: .zero, size: targetFrame.size)
-            hostingView.rootView = LockScreenLiveActivityOverlay(model: overlayModel, animator: overlayAnimator, notchSize: context.notchSize, isDynamicIslandMode: isDynamicIslandMode)
-        }
-
-        currentNotchSize = context.notchSize
-
-        print("[\(timestamp())] LockScreenLiveActivityWindowManager: realigned window due to \(reason)")
+        print("[\(timestamp())] LockScreenLiveActivityWindowManager: realigned windows due to \(reason)")
     }
 
-    private func present(notchSize: CGSize, on screen: NSScreen) {
+    private func present() {
         guard Defaults[.enableLockScreenLiveActivity] else {
             hideImmediately()
             return
         }
 
-        let windowSize = windowSize(for: notchSize)
-        let window = ensureWindow(windowSize: windowSize, screen: screen)
-        let targetFrame = frame(for: windowSize, on: screen)
-        window.setFrame(targetFrame, display: true)
+        for screen in NSScreen.screens {
+            let notchSize = getNotchSize(for: screen)
+            let isDI = isDynamicIslandModeForScreen(screen)
+            let windowSize = self.windowSize(for: notchSize, isDynamicIslandMode: isDI)
+            let window = ensureWindow(windowSize: windowSize, screen: screen)
+            let targetFrame = frame(for: windowSize, on: screen)
+            
+            if window.frame != targetFrame {
+                window.setFrame(targetFrame, display: true)
+            }
 
-        let overlayView = LockScreenLiveActivityOverlay(model: overlayModel, animator: overlayAnimator, notchSize: notchSize, isDynamicIslandMode: isDynamicIslandMode)
+            let overlayView = LockScreenLiveActivityOverlay(model: overlayModel, animator: overlayAnimator, notchSize: notchSize, isDynamicIslandMode: isDI)
 
-        if let hostingView {
-            hostingView.rootView = overlayView
-            hostingView.frame = CGRect(origin: .zero, size: targetFrame.size)
-        } else {
-            let view = NSHostingView(rootView: overlayView)
-            view.frame = CGRect(origin: .zero, size: targetFrame.size)
-            hostingView = view
-            window.contentView = view
+            if let hostingView = hostingViews[screen] {
+                hostingView.rootView = overlayView
+                hostingView.frame = CGRect(origin: .zero, size: targetFrame.size)
+            } else {
+                let view = NSHostingView(rootView: overlayView)
+                view.frame = CGRect(origin: .zero, size: targetFrame.size)
+                hostingViews[screen] = view
+                window.contentView = view
+            }
+
+            if window.contentView !== hostingViews[screen] {
+                window.contentView = hostingViews[screen]
+            }
+
+            window.displayIfNeeded()
+
+            if hasDelegated[screen] != true {
+                SkyLightOperator.shared.delegateWindow(window)
+                hasDelegated[screen] = true
+            }
+
+            window.orderFrontRegardless()
+            window.alphaValue = 1
+
+            currentNotchSizes[screen] = notchSize
         }
-
-        if window.contentView !== hostingView {
-            window.contentView = hostingView
-        }
-
-        window.displayIfNeeded()
-
-        if !hasDelegated {
-            SkyLightOperator.shared.delegateWindow(window)
-            hasDelegated = true
-        }
-
-        window.orderFrontRegardless()
-        window.alphaValue = 1
-
-        currentNotchSize = notchSize
     }
 
     func showLocked() {
         hideTask?.cancel()
-        guard let context = lockContext() else { return }
-
-        let collapsedScale = LockScreenLiveActivityOverlay.collapsedScale(for: context.notchSize, isDynamicIslandMode: isDynamicIslandMode)
 
         overlayAnimator.update(isLocked: true)
-        overlayModel.scale = collapsedScale
         overlayModel.opacity = 0
+        
+        let mainScreen = LockScreenDisplayContextProvider.shared.contextSnapshot()?.screen ?? NSScreen.main
+        if let mainScreen {
+            let notchSize = getNotchSize(for: mainScreen)
+            let isDI = isDynamicIslandModeForScreen(mainScreen)
+            overlayModel.scale = LockScreenLiveActivityOverlay.collapsedScale(for: notchSize, isDynamicIslandMode: isDI)
+        } else {
+            overlayModel.scale = 0.7
+        }
 
-        present(notchSize: context.notchSize, on: context.screen)
+        present()
 
         DispatchQueue.main.async {
             withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
@@ -230,12 +229,11 @@ class LockScreenLiveActivityWindowManager {
 
     func showUnlockAndScheduleHide() {
         hideTask?.cancel()
-        guard let context = lockContext() else { return }
 
         overlayModel.scale = 1
         overlayModel.opacity = 1
 
-        present(notchSize: context.notchSize, on: context.screen)
+        present()
 
         overlayAnimator.update(isLocked: false)
 
@@ -251,18 +249,15 @@ class LockScreenLiveActivityWindowManager {
     func hideImmediately() {
         hideTask?.cancel()
         hideTask = nil
-
         hideWithAnimation()
     }
 
     private func hideWithAnimation() {
-        guard let window else { return }
-
-        let targetScale: CGFloat
-        if let notchSize = currentNotchSize {
-            targetScale = LockScreenLiveActivityOverlay.collapsedScale(for: notchSize, isDynamicIslandMode: isDynamicIslandMode)
-        } else {
-            targetScale = 0.7
+        let mainScreen = LockScreenDisplayContextProvider.shared.contextSnapshot()?.screen ?? NSScreen.main
+        var targetScale: CGFloat = 0.7
+        if let mainScreen, let notchSize = currentNotchSizes[mainScreen] {
+            let isDI = isDynamicIslandModeForScreen(mainScreen)
+            targetScale = LockScreenLiveActivityOverlay.collapsedScale(for: notchSize, isDynamicIslandMode: isDI)
         }
 
         withAnimation(.smooth(duration: LockScreenAnimationTimings.unlockCollapse)) {
@@ -273,12 +268,16 @@ class LockScreenLiveActivityWindowManager {
         NSAnimationContext.runAnimationGroup { context in
             context.duration = LockScreenAnimationTimings.unlockCollapse
             context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            window.animator().alphaValue = 0
+            for window in windows.values {
+                window.animator().alphaValue = 0
+            }
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + LockScreenAnimationTimings.unlockCollapse + 0.02) {
-            window.orderOut(nil)
-            self.currentNotchSize = nil
+            for window in self.windows.values {
+                window.orderOut(nil)
+            }
+            self.currentNotchSizes.removeAll()
         }
 
         print("[\(timestamp())] LockScreenLiveActivityWindowManager: HUD hidden")

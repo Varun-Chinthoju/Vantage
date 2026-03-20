@@ -26,9 +26,13 @@ import QuartzCore
 final class LockScreenWeatherPanelManager {
     static let shared = LockScreenWeatherPanelManager()
 
-    private var window: NSWindow?
-    private var hasDelegated = false
-    private(set) var latestFrame: NSRect?
+    private var windows: [NSScreen: NSWindow] = [:]
+    private var hasDelegated: [NSScreen: Bool] = [:]
+    private var latestFrames: [NSScreen: NSRect] = [:]
+
+    func latestFrame(for screen: NSScreen) -> NSRect? {
+        return latestFrames[screen]
+    }
     private var lastSnapshot: LockScreenWeatherSnapshot?
     private var lastContentSize: CGSize?
     private var lastInlineBaselineHeight: CGFloat = 0
@@ -48,43 +52,48 @@ final class LockScreenWeatherPanelManager {
     }
 
     func hide() {
-        guard let window else { return }
-        window.orderOut(nil)
-        window.contentView = nil
-        latestFrame = nil
+        for window in windows.values {
+            window.orderOut(nil)
+            window.contentView = nil
+        }
+        latestFrames.removeAll()
         lastSnapshot = nil
         lastContentSize = nil
     }
 
     private func render(snapshot: LockScreenWeatherSnapshot, makeVisible: Bool) {
-        guard let screen = currentScreen() else { return }
-        if !makeVisible, window == nil {
+        if !makeVisible && windows.isEmpty {
             return
         }
 
         let view = LockScreenWeatherWidget(snapshot: snapshot)
-        let hostingView = NSHostingView(rootView: view)
-        let fittingSize = hostingView.fittingSize
+        let prototypeHostingView = NSHostingView(rootView: view)
+        let fittingSize = prototypeHostingView.fittingSize
         if snapshot.widgetStyle == .inline {
             lastInlineBaselineHeight = max(lastInlineBaselineHeight, fittingSize.height)
         }
-        hostingView.frame = NSRect(origin: .zero, size: fittingSize)
 
-        let targetFrame = frame(for: fittingSize, snapshot: snapshot, on: screen)
-        let window = ensureWindow()
-        window.setFrame(targetFrame, display: true)
-        latestFrame = targetFrame
-        window.contentView = hostingView
+        for screen in NSScreen.screens {
+            let targetFrame = frame(for: fittingSize, snapshot: snapshot, on: screen)
+            let window = ensureWindow(for: screen)
+            window.setFrame(targetFrame, display: true)
+            latestFrames[screen] = targetFrame
+            
+            let hostingView = NSHostingView(rootView: view)
+            hostingView.frame = NSRect(origin: .zero, size: fittingSize)
+            window.contentView = hostingView
+
+            if makeVisible {
+                window.orderFrontRegardless()
+            }
+        }
+
         lastSnapshot = snapshot
         lastContentSize = fittingSize
-
-        if makeVisible {
-            window.orderFrontRegardless()
-        }
     }
 
-    private func ensureWindow() -> NSWindow {
-        if let window {
+    private func ensureWindow(for screen: NSScreen) -> NSWindow {
+        if let window = windows[screen] {
             return window
         }
 
@@ -106,10 +115,10 @@ final class LockScreenWeatherPanelManager {
 
         ScreenCaptureVisibilityManager.shared.register(newWindow, scope: .entireInterface)
 
-        window = newWindow
-        if !hasDelegated {
+        windows[screen] = newWindow
+        if hasDelegated[screen] != true {
             SkyLightOperator.shared.delegateWindow(newWindow)
-            hasDelegated = true
+            hasDelegated[screen] = true
         }
         return newWindow
     }
@@ -141,20 +150,21 @@ final class LockScreenWeatherPanelManager {
     }
 
     func refreshPositionForOffsets(animated: Bool = true) {
-        guard let window, let snapshot = lastSnapshot else { return }
-        guard let screen = currentScreen() else { return }
-        let size = lastContentSize ?? window.frame.size
-        let targetFrame = frame(for: size, snapshot: snapshot, on: screen)
-        latestFrame = targetFrame
+        guard let snapshot = lastSnapshot else { return }
+        for (screen, window) in windows {
+            let size = lastContentSize ?? window.frame.size
+            let targetFrame = frame(for: size, snapshot: snapshot, on: screen)
+            latestFrames[screen] = targetFrame
 
-        if animated {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.22
-                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                window.animator().setFrame(targetFrame, display: true)
+            if animated {
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.22
+                    context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                    window.animator().setFrame(targetFrame, display: true)
+                }
+            } else {
+                window.setFrame(targetFrame, display: true)
             }
-        } else {
-            window.setFrame(targetFrame, display: true)
         }
     }
 
@@ -180,7 +190,8 @@ final class LockScreenWeatherPanelManager {
     }
 
     private func handleScreenGeometryChange(reason: String) {
-        guard window?.isVisible == true else { return }
+        let anyVisible = windows.values.contains { $0.isVisible }
+        guard anyVisible else { return }
         refreshPositionForOffsets(animated: false)
         print("LockScreenWeatherPanelManager: realigned window due to \(reason)")
     }

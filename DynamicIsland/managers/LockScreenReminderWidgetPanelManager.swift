@@ -26,13 +26,13 @@ import Defaults
 final class LockScreenReminderWidgetPanelManager {
     static let shared = LockScreenReminderWidgetPanelManager()
 
-    private var window: NSWindow?
-    private var hasDelegated = false
+    private var windows: [NSScreen: NSWindow] = [:]
+    private var hasDelegated: [NSScreen: Bool] = [:]
     private var screenChangeObserver: NSObjectProtocol?
     private var workspaceObservers: [NSObjectProtocol] = []
 
     var isVisible: Bool {
-        window?.isVisible == true
+        windows.values.contains { $0.isVisible }
     }
 
     private init() {
@@ -48,47 +48,53 @@ final class LockScreenReminderWidgetPanelManager {
     }
 
     func hide() {
-        guard let window else { return }
-        window.orderOut(nil)
-        window.contentView = nil
+        for window in windows.values {
+            window.orderOut(nil)
+            window.contentView = nil
+        }
     }
 
     func refreshPosition(animated: Bool) {
-        guard let window, window.isVisible, let screen = currentScreen() else { return }
-        let target = frame(for: window.frame.size, on: screen)
-        if animated {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.22
-                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                window.animator().setFrame(target, display: true)
+        for (screen, window) in windows {
+            guard window.isVisible else { continue }
+            let target = frame(for: window.frame.size, on: screen)
+            if animated {
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.22
+                    context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                    window.animator().setFrame(target, display: true)
+                }
+            } else {
+                window.setFrame(target, display: true)
             }
-        } else {
-            window.setFrame(target, display: true)
         }
     }
 
     private func render(snapshot: LockScreenReminderWidgetSnapshot, makeVisible: Bool) {
-        guard let screen = currentScreen() else { return }
-        if !makeVisible, window == nil {
+        if !makeVisible && windows.isEmpty {
             return
         }
 
         let view = LockScreenReminderWidget(snapshot: snapshot)
-        let hostingView = NSHostingView(rootView: view)
-        let fittingSize = hostingView.fittingSize
-        hostingView.frame = NSRect(origin: .zero, size: fittingSize)
+        let prototypeHostingView = NSHostingView(rootView: view)
+        let fittingSize = prototypeHostingView.fittingSize
 
-        let window = ensureWindow()
-        window.setFrame(frame(for: fittingSize, on: screen), display: true)
-        window.contentView = hostingView
+        for screen in NSScreen.screens {
+            let window = ensureWindow(for: screen)
+            window.setFrame(frame(for: fittingSize, on: screen), display: true)
+            
+            let hostingView = NSHostingView(rootView: view)
+            hostingView.frame = NSRect(origin: .zero, size: fittingSize)
+            window.contentView = hostingView
 
-        if makeVisible {
-            window.orderFrontRegardless()
+            if makeVisible {
+                window.orderFrontRegardless()
+            }
         }
     }
 
-    private func ensureWindow() -> NSWindow {
-        if let window {
+    private func ensureWindow(for screen: NSScreen) -> NSWindow {
+        if let window = windows[screen] {
             return window
         }
 
@@ -110,10 +116,10 @@ final class LockScreenReminderWidgetPanelManager {
 
         ScreenCaptureVisibilityManager.shared.register(newWindow, scope: .entireInterface)
 
-        window = newWindow
-        if !hasDelegated {
+        windows[screen] = newWindow
+        if hasDelegated[screen] != true {
             SkyLightOperator.shared.delegateWindow(newWindow)
-            hasDelegated = true
+            hasDelegated[screen] = true
         }
         return newWindow
     }
@@ -132,8 +138,8 @@ final class LockScreenReminderWidgetPanelManager {
         default:
             originX = screenFrame.midX - (size.width / 2)
         }
-        let musicTop = LockScreenPanelManager.shared.latestFrame?.maxY ?? (screenFrame.midY - 32)
-        let timerFrame = LockScreenTimerWidgetPanelManager.shared.latestFrame
+        let musicTop = LockScreenPanelManager.shared.latestFrame(for: screen)?.maxY ?? (screenFrame.midY - 32)
+        let timerFrame = LockScreenTimerWidgetPanelManager.shared.latestFrame(for: screen)
 
         let marginAboveMusic: CGFloat = 16
         let marginAboveTimer: CGFloat = 24
@@ -146,7 +152,7 @@ final class LockScreenReminderWidgetPanelManager {
 
         let defaultWeatherBottom = screenFrame.midY + (screenFrame.height * 0.14)
         let minimumWeatherBottom = lowerBound + size.height + marginBelowWeather
-        let weatherBottom = LockScreenWeatherPanelManager.shared.latestFrame?.minY ?? min(screenFrame.maxY - 120, max(defaultWeatherBottom, minimumWeatherBottom))
+        let weatherBottom = LockScreenWeatherPanelManager.shared.latestFrame(for: screen)?.minY ?? min(screenFrame.maxY - 120, max(defaultWeatherBottom, minimumWeatherBottom))
 
         let upperBound = weatherBottom - marginBelowWeather - size.height
         let clampedUpperBound = max(upperBound, lowerBound)
@@ -189,7 +195,8 @@ final class LockScreenReminderWidgetPanelManager {
     }
 
     private func handleScreenGeometryChange(reason: String) {
-        guard window?.isVisible == true else { return }
+        let anyVisible = windows.values.contains { $0.isVisible }
+        guard anyVisible else { return }
         refreshPosition(animated: false)
         print("LockScreenReminderWidgetPanelManager: realigned window due to \(reason)")
     }
